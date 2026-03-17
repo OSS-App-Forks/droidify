@@ -108,27 +108,6 @@ class AppDetailFragment() : ScreenFragment(), AppDetailAdapter.Callbacks {
     private var detailAdapter: AppDetailAdapter? = null
     private var imageViewer: StfalconImageViewer.Builder<Product.Screenshot>? = null
 
-    private val exportApkLauncher = registerForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/vnd.android.package-archive")
-    ) { uri ->
-        if (uri == null) return@registerForActivityResult
-        val release = products.firstOrNull()?.first?.selectedReleases?.firstOrNull() ?: return@registerForActivityResult
-        val cacheFile = com.looker.droidify.utility.common.cache.Cache.getReleaseFile(requireContext(), release.cacheFileName)
-        if (!cacheFile.exists()) return@registerForActivityResult
-        
-        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            try {
-                requireContext().contentResolver.openOutputStream(uri)?.use { output ->
-                    cacheFile.inputStream().use { input ->
-                        input.copyTo(output)
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
     private val downloadConnection = Connection(
         serviceClass = DownloadService::class.java,
         onBind = { _, binder ->
@@ -339,11 +318,6 @@ class AppDetailFragment() : ScreenFragment(), AppDetailAdapter.Callbacks {
 
         (recyclerView?.adapter as? AppDetailAdapter)?.action = adapterAction
 
-        val cacheFileExists = product?.selectedReleases?.firstOrNull()?.cacheFileName?.let {
-            com.looker.droidify.utility.common.cache.Cache.getReleaseFile(requireContext(), it).exists()
-        } == true
-        (recyclerView?.adapter as? AppDetailAdapter)?.isExportVisible = cacheFileExists
-
         for (action in sequenceOf(
             Action.INSTALL,
             Action.UPDATE,
@@ -421,12 +395,6 @@ class AppDetailFragment() : ScreenFragment(), AppDetailAdapter.Callbacks {
                 state.currentItem.release.cacheFileName,
             )
         }
-    }
-
-    override fun onExportApkClick() {
-        val release = products.firstOrNull()?.first?.selectedReleases?.firstOrNull() ?: return
-        val fileName = "${viewModel.packageName}_${release.version}.apk"
-        exportApkLauncher.launch(fileName)
     }
 
     override fun onActionClick(action: AppDetailAdapter.Action) {

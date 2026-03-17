@@ -102,7 +102,6 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
 
     interface Callbacks {
         fun onActionClick(action: Action)
-        fun onExportApkClick()
         fun onFavouriteClicked()
         fun onPreferenceChanged(preference: ProductPreference)
         fun onPermissionsClick(group: String?, permissions: List<String>)
@@ -447,8 +446,6 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
 
     private class InstallButtonViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val button = itemView.findViewById<MaterialButton>(R.id.action)!!
-        val exportButton = itemView.findViewById<MaterialButton>(R.id.export_action)!!
-        val actionSpace = itemView.findViewById<View>(R.id.action_space)!!
         val incompatibleText = itemView.findViewById<TextView>(R.id.incompatible_text)!!
 
         val actionTintNormal = button.context.getColorFromAttr(android.R.attr.colorPrimary)
@@ -1125,15 +1122,6 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
             field = value
         }
 
-    var isExportVisible: Boolean = false
-        set(value) {
-            if (field != value) {
-                field = value
-                val index = items.indexOf(Item.InstallButtonItem)
-                if (index > 0) notifyItemChanged(index)
-            }
-        }
-
     var incompatibilityReason: CharSequence? = null
         set(value) {
             if (field != value) {
@@ -1177,7 +1165,6 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
                 parent.inflate(R.layout.install_button)
             ).apply {
                 button.setOnClickListener { action?.let(callbacks::onActionClick) }
-                exportButton.setOnClickListener { callbacks.onExportApkClick() }
             }
 
             ViewType.SCREENSHOT -> ScreenShotViewHolder(parent.context)
@@ -1496,9 +1483,6 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
                         iconTint = holder.actionTintOnDisabled
                     }
                 }
-
-                holder.exportButton.isVisible = isExportVisible
-                holder.actionSpace.isVisible = isExportVisible
             }
 
             ViewType.SCREENSHOT -> {
