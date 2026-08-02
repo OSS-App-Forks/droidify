@@ -21,16 +21,16 @@ import com.looker.droidify.datastore.model.SortOrder
 import com.looker.droidify.datastore.model.Theme
 import com.looker.droidify.utility.common.Exporter
 import com.looker.droidify.utility.common.extension.updateAsMutable
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import java.util.*
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalTime::class)
 class PreferenceSettingsRepository(
@@ -59,7 +59,7 @@ class PreferenceSettingsRepository(
     override suspend fun import(target: Uri) {
         val importedSettings = exporter.import(target)
         val updatedFavorites = importedSettings.favouriteApps +
-                getInitial().favouriteApps
+            getInitial().favouriteApps
         val updatedSettings = importedSettings.copy(favouriteApps = updatedFavorites)
         dataStore.edit {
             it.setting(updatedSettings)
@@ -144,6 +144,9 @@ class PreferenceSettingsRepository(
 
     override suspend fun setRbLogLastModified(date: Date) =
         LAST_RB_FETCH.update(date.time)
+
+    override suspend fun setRbLogMirrorIndex(index: Int) =
+        RB_MIRROR_INDEX.update(index)
 
     override suspend fun updateLastModifiedDownloadStats(date: Date) {
         dataStore.edit { pref ->
@@ -243,6 +246,7 @@ class PreferenceSettingsRepository(
         val cleanUpInterval = preferences[CLEAN_UP_INTERVAL]?.hours ?: 12L.hours
         val lastCleanup = preferences[LAST_CLEAN_UP]?.let { Instant.fromEpochMilliseconds(it) }
         val lastRbLogFetch = preferences[LAST_RB_FETCH]
+        val rbLogMirrorIndex = preferences[RB_MIRROR_INDEX] ?: 0
         val lastModifiedDownloadStats = preferences[LAST_MODIFIED_DS]?.takeIf { it > 0L }
         val favouriteApps = preferences[FAVOURITE_APPS] ?: emptySet()
         val homeScreenSwiping = preferences[HOME_SCREEN_SWIPING] ?: true
@@ -270,6 +274,7 @@ class PreferenceSettingsRepository(
             cleanUpInterval = cleanUpInterval,
             lastCleanup = lastCleanup,
             lastRbLogFetch = lastRbLogFetch,
+            rbLogMirrorIndex = rbLogMirrorIndex,
             lastModifiedDownloadStats = lastModifiedDownloadStats,
             favouriteApps = favouriteApps,
             homeScreenSwiping = homeScreenSwiping,
@@ -300,6 +305,7 @@ class PreferenceSettingsRepository(
         val CLEAN_UP_INTERVAL = longPreferencesKey("key_clean_up_interval")
         val LAST_CLEAN_UP = longPreferencesKey("key_last_clean_up_time")
         val LAST_RB_FETCH = longPreferencesKey("key_last_rb_logs_fetch_time")
+        val RB_MIRROR_INDEX = intPreferencesKey("key_rb_logs_mirror_index")
         val LAST_MODIFIED_DS = longPreferencesKey("key_last_modified_download_stats")
         val FAVOURITE_APPS = stringSetPreferencesKey("key_favourite_apps")
         val HOME_SCREEN_SWIPING = booleanPreferencesKey("key_home_swiping")
@@ -363,6 +369,7 @@ class PreferenceSettingsRepository(
             set(CLEAN_UP_INTERVAL, settings.cleanUpInterval.inWholeHours)
             settings.lastCleanup?.toEpochMilliseconds()?.let { set(LAST_CLEAN_UP, it) }
             settings.lastRbLogFetch?.let { set(LAST_RB_FETCH, it) }
+            set(RB_MIRROR_INDEX, settings.rbLogMirrorIndex)
             settings.lastModifiedDownloadStats?.let { set(LAST_MODIFIED_DS, it) }
             set(FAVOURITE_APPS, settings.favouriteApps)
             set(HOME_SCREEN_SWIPING, settings.homeScreenSwiping)
