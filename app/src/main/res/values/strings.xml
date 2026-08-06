@@ -262,6 +262,7 @@
     <string name="select_installer">Select installer</string>
     <string name="title_activity_main_compose">MainComposeActivity</string>
     <string name="rb_badge">Reproducible build badge</string>
+    <string name="rb_badge_info">Green checkmark\t-&gt; Verified reproducible build\nRed checkmark\t-&gt; Non-reproducible build\nBrown checkmark\t-&gt; Unknown state</string>
     <string name="rb_badge_verified">Verified reproducible build</string>
     <string name="rb_badge_non_reproducible">Non-reproducible build</string>
     <string name="rb_badge_unknown">Unknown state</string>
