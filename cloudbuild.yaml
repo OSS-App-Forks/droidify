@@ -19,6 +19,10 @@ steps:
         if [ -z "$$VERSION_TAG" ]; then
             VERSION_TAG="v0.0.1"
         fi
+
+        echo "========="
+        env
+        echo "========="
         
         APK_NAME="com.looker.droidify_$${VERSION_TAG}-unsigned.apk"
         
