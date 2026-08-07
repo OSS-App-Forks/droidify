@@ -3,6 +3,11 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+# Runs 'ggrep' on macOS (if installed) and system 'grep' on Linux:
+if command -v ggrep >/dev/null 2>&1; then
+    grep() { ggrep "$@"; }
+fi
+
 # Build the unsigned release APK
 echo "Building unsigned release APK with Gradle..."
 ./gradlew assembleRelease
