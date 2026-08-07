@@ -1,5 +1,4 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
-import java.io.File
 
 plugins {
     alias(libs.plugins.android.application)
@@ -117,29 +116,6 @@ android {
         }
     }
 }
-
-//val gitTagProvider = providers.exec {
-//    commandLine("git", "describe", "--tags", "--abbrev=0")
-//}.standardOutput.asText.map { it.trim() }.orElse("unknown")
-//
-//val apkDirProvider = layout.buildDirectory.dir("outputs/apk/release")
-//
-//val appNamespace = android.namespace.toString()
-//
-//tasks.whenTaskAdded {
-//    if (name == "assembleRelease") {
-//        doLast {
-//            val apkDir = apkDirProvider.get().asFile
-//            val tag = gitTagProvider.get()
-//            apkDir.listFiles()?.forEach { apkFile: File ->
-//                if (apkFile.name.endsWith(".apk") && !apkFile.name.contains(tag)) {
-//                    val versionedName = android.namespace.toString() + "_" + tag + ".apk"
-//                    apkFile.renameTo(File(apkFile.parent, versionedName))
-//                }
-//            }
-//        }
-//    }
-//}
 
 java {
     toolchain {
