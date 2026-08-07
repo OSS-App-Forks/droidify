@@ -1,4 +1,8 @@
 steps:
+
+  - name: 'gcr.io/cloud-builders/git'
+    args: ['fetch', '--unshallow', '--tags']
+
   # Step 1: Build the unsigned release APK using the custom builder image
   - name: '${_ANDROID_BUILDER_IMAGE}:${_SDK_TAG}'
     entrypoint: 'bash'
