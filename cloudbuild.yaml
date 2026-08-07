@@ -16,27 +16,27 @@ steps:
       - |
         # Fetch latest git tag version matching the build-unsigned.sh logic
         VERSION_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-        if [ -z "$VERSION_TAG" ]; then
+        if [ -z "$$VERSION_TAG" ]; then
             VERSION_TAG="v0.0.1"
         fi
         
-        APK_NAME="com.looker.droidify_${VERSION_TAG}-unsigned.apk"
+        APK_NAME="com.looker.droidify_$${VERSION_TAG}-unsigned.apk"
         
         # Check if the APK exists
-        if [ ! -f "$APK_NAME" ]; then
-            echo "Error: Unsigned APK not found at project root: $APK_NAME"
+        if [ ! -f "$$APK_NAME" ]; then
+            echo "Error: Unsigned APK not found at project root: $$APK_NAME"
             exit 1
         fi
         
         # Upload the APK to the generic Artifact Registry repository
-        echo "Uploading $APK_NAME to Generic Repository: ${_GENERIC_REPOSITORY}..."
+        echo "Uploading $$APK_NAME to Generic Repository: ${_GENERIC_REPOSITORY}..."
         gcloud artifacts generic upload \
             --project="${_GAR_PROJECT_ID}" \
             --location="${_LOCATION}" \
             --repository="${_GENERIC_REPOSITORY}" \
             --package="droidify" \
-            --version="$VERSION_TAG" \
-            --source="$APK_NAME"
+            --version="$$VERSION_TAG" \
+            --source="$$APK_NAME"
 
 substitutions:
   _LOCATION: 'asia'                          # The GCP region or multi-region (e.g. asia, asia-east1) for APK upload
