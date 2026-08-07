@@ -5,9 +5,16 @@ version=""
 changelog_directory="./metadata/en-US/changelogs"
 kotlin_file="./app/build.gradle.kts"
 
+# Fallback to GNU sed (gsed) if it exists (fixes macOS BSD sed issues)
+if command -v gsed >/dev/null 2>&1; then
+  sed() {
+    command gsed "$@"
+  }
+fi
+
 # Pull commits from origin
-echo "Pulling commits from GitHub"
-git pull --rebase
+# echo "Pulling commits from GitHub"
+# git pull --rebase
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
@@ -73,9 +80,9 @@ nvim $changelog_file
 read -p "Do you want to create a Git tag for version $git_tag? (y/n): " -r
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   git add -A
-  git commit -m "Release $version_name"
+  git commit -m "[custom] Release $version_name"
   # Create a Git tag
-  git tag "$git_tag"
+  git tag "$git_tag" -f
   echo "Git tag '$git_tag' created."
 else
   echo "Git tag not created."
