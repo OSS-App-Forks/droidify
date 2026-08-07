@@ -1,10 +1,15 @@
 steps:
 
+  # Step 1: Ensure all tags and submodules are loaded
   - name: 'gcr.io/cloud-builders/git'
-    args: ['fetch', '--unshallow', '--tags']
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        ([[ -d .git ]] && (git fetch --unshallow --tags; git submodule update --init --recursive)) || true
 
-  # Step 1: Build the unsigned release APK using the custom builder image
-  - name: '${_ANDROID_BUILDER_IMAGE}:${_SDK_TAG}'
+  # Step 2: Build the unsigned release APK using the custom builder image
+  - name: '${_SDK_IMAGE}:${_SDK_TAG}'
     entrypoint: 'bash'
     args:
       - '-c'
@@ -12,47 +17,22 @@ steps:
         chmod +x ./build-unsigned.sh
         ./build-unsigned.sh
 
-  # Step 2: Locate the built APK and upload it to the generic Artifact Registry repository
+  # Step 3: Locate the built APK and upload it to the generic Artifact Registry repository
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'bash'
+    entrypoint: bash
     args:
       - '-c'
       - |
-        # Fetch latest git tag version matching the build-unsigned.sh logic
-        VERSION_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-        if [ -z "$$VERSION_TAG" ]; then
-            VERSION_TAG="v0.0.1"
-        fi
+        set -euo pipefail
+        source /workspace/build.env
+        gcloud storage cp "$$OUTPUT_APK" "gs://${_UNSIGNED_APK_BUCKET}/$${OUTPUT_APK}"
 
-        echo "========="
-        env
-        echo "========="
-        
-        APK_NAME="com.looker.droidify_$${VERSION_TAG}-unsigned.apk"
-        
-        # Check if the APK exists
-        if [ ! -f "$$APK_NAME" ]; then
-            echo "Error: Unsigned APK not found at project root: $$APK_NAME"
-            exit 1
-        fi
-        
-        # Upload the APK to the generic Artifact Registry repository
-        echo "Uploading $$APK_NAME to Generic Repository: ${_GENERIC_REPOSITORY}..."
-        gcloud artifacts generic upload \
-            --project="${_GAR_PROJECT_ID}" \
-            --location="${_LOCATION}" \
-            --repository="${_GENERIC_REPOSITORY}" \
-            --package="droidify" \
-            --version="$$VERSION_TAG" \
-            --source="$$APK_NAME"
 
 substitutions:
-  _LOCATION: 'asia'                          # The GCP region or multi-region (e.g. asia, asia-east1) for APK upload
-  _GAR_PROJECT_ID: '${PROJECT_ID}'           # Defaults to current Cloud Build project, can be overridden for cross-project setups
-  _ANDROID_BUILDER_IMAGE: 'asia-docker.pkg.dev/${PROJECT_ID}/docker-repo/android-builder' # The builder image which has Android SDK and build tools installed
-  _GENERIC_REPOSITORY: 'generic-artifacts-asia' # The Generic-format Artifact Registry repository name for uploading APK
-  _SDK_TAG: 'sdk-36'                         # Tag of the custom builder image to use (e.g., sdk-36, latest)
+  _SDK_IMAGE: 'asia-docker.pkg.dev/${PROJECT_ID}/docker-repo/android-builder' # The builder image which has Android SDK and build tools installed
+  _UNSIGNED_APK_BUCKET: 'generic-artifacts-asia' # The GCS Bucket for uploading unsigned APK
+  _SDK_TAG: 'sdk-36-jdk17'                         # Tag of the custom builder image to use (e.g., sdk-36-jdk17, latest)
 
 options:
-  machineType: 'E2_HIGHCPU_8'
+  machineType: 'E2_HIGHCPU_32'
   logging: 'CLOUD_LOGGING_ONLY'
