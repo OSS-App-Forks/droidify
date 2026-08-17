@@ -10,7 +10,7 @@ plugins {
 }
 
 android {
-    val latestVersionName = "0.7.4"
+    val latestVersionName = "0.7.5"
     namespace = "com.looker.droidify"
     compileSdk {
         version = release(36)
@@ -20,33 +20,17 @@ android {
         applicationId = "com.looker.droidify"
         minSdk = 23
         versionName = latestVersionName
-        versionCode = 740
+        versionCode = 750
 
         testInstrumentationRunner = "com.looker.droidify.TestRunner"
     }
 
     androidResources.generateLocaleConfig = true
 
-    ksp {
-        arg("room.schemaLocation", "$projectDir/schemas")
-        arg("room.generateKotlin", "true")
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard.pro",
-            )
-        }
-        create("alpha") {
-            initWith(getByName("debug"))
-            applicationIdSuffix = ".alpha"
-            versionNameSuffix = ".a"
-            isMinifyEnabled = true
-            isDebuggable = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard.pro",
@@ -80,15 +64,7 @@ android {
         }
     }
 
-    kotlin {
-        compilerOptions {
-            freeCompilerArgs.addAll("-Xcontext-parameters")
-            optIn.add("kotlin.RequiresOptIn")
-        }
-    }
-
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -117,6 +93,18 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+    arg("room.generateKotlin", "true")
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xcontext-parameters")
+        optIn.add("kotlin.RequiresOptIn")
+    }
+}
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
@@ -125,8 +113,6 @@ java {
 }
 
 dependencies {
-    coreLibraryDesugaring(libs.desugaring)
-
     implementation(libs.material)
     implementation(libs.core.ktx)
     implementation(libs.activity)
@@ -143,7 +129,6 @@ dependencies {
     implementation(libs.datastore.proto)
 
     implementation(libs.kotlin.stdlib)
-    implementation(libs.datetime)
 
     implementation(libs.bundles.coroutines)
 
@@ -153,7 +138,7 @@ dependencies {
     implementation(libs.jackson.core)
     implementation(libs.serialization)
 
-    implementation(libs.bundles.ktor)
+    implementation(libs.okhttp)
     implementation(libs.bundles.room)
     ksp(libs.room.compiler)
 

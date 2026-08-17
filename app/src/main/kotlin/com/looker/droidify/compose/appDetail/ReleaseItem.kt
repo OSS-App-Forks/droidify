@@ -1,6 +1,5 @@
 package com.looker.droidify.compose.appDetail
 
-import android.text.format.DateFormat
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,10 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.GppBad
-import androidx.compose.material.icons.outlined.GppGood
-import androidx.compose.material.icons.outlined.GppMaybe
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -26,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -40,18 +36,11 @@ import com.looker.droidify.model.InstalledItem
 import com.looker.droidify.model.Release
 import com.looker.droidify.model.Repository
 import com.looker.droidify.network.DataSize
+import com.looker.droidify.utility.common.formatDate
 import com.looker.droidify.utility.common.sdkName
 import com.looker.droidify.utility.extension.android.Android
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toJavaLocalDateTime
-import kotlinx.datetime.toLocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import java.util.*
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
-@OptIn(ExperimentalTime::class)
 @Composable
 fun ReleaseItem(
     release: Release,
@@ -142,16 +131,7 @@ fun ReleaseItem(
                 }
 
                 // Date
-                val dateString = remember(release.added) {
-                    val instant = Instant.fromEpochMilliseconds(release.added)
-                    val date = instant.toLocalDateTime(TimeZone.UTC)
-                    try {
-                        date.toJavaLocalDateTime()
-                            .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
-                    } catch (_: Exception) {
-                        DateFormat.getDateFormat(context).format(release.added)
-                    }
-                }
+                val dateString = remember(release.added) { formatDate(release.added) }
                 Text(
                     text = dateString,
                     style = MaterialTheme.typography.bodyMedium,
@@ -167,11 +147,13 @@ fun ReleaseItem(
             ) {
                 if (reproducible != Reproducible.NO_DATA) {
                     Icon(
-                        imageVector = when (reproducible) {
-                            Reproducible.TRUE -> Icons.Outlined.GppGood
-                            Reproducible.FALSE -> Icons.Outlined.GppBad
-                            else -> Icons.Outlined.GppMaybe // Reproducible.UNKNOWN
-                        },
+                        painter = painterResource(
+                            when (reproducible) {
+                                Reproducible.TRUE -> R.drawable.ic_gpp_good
+                                Reproducible.FALSE -> R.drawable.ic_gpp_bad
+                                else -> R.drawable.ic_gpp_maybe // Reproducible.UNKNOWN
+                            },
+                        ),
                         contentDescription = stringResource(id = R.string.rb_badge),
                         tint = when (reproducible) {
                             Reproducible.TRUE -> Color.Green
@@ -266,18 +248,9 @@ fun ReleaseItem(
                 )
             }
 
-            // SDK Version
-            val sdkVersionText = remember(release.targetSdkVersion, release.minSdkVersion) {
-                val targetSdkVersion = sdkName.getOrDefault(
-                    release.targetSdkVersion,
-                    context.getString(R.string.label_unknown_sdk, release.targetSdkVersion),
-                )
-                val minSdkVersion = sdkName.getOrDefault(
-                    release.minSdkVersion,
-                    context.getString(R.string.label_unknown_sdk, release.minSdkVersion),
-                )
-                context.getString(R.string.label_sdk_version, targetSdkVersion, minSdkVersion)
-            }
+            val targetSDK = sdkName[release.targetSdkVersion] ?: stringResource(R.string.label_unknown_sdk, release.targetSdkVersion)
+            val minSDK = sdkName[release.minSdkVersion] ?: stringResource(R.string.label_unknown_sdk, release.minSdkVersion)
+            val sdkVersionText = stringResource(R.string.label_sdk_version, targetSDK, minSDK)
             Text(
                 text = sdkVersionText,
                 style = MaterialTheme.typography.bodyMedium,

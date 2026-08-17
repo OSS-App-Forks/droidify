@@ -81,8 +81,6 @@ class ShizukuInstaller(
     override suspend fun uninstall(packageName: PackageName) =
         context.uninstallPackage(packageName)
 
-    override fun close() = Unit
-
     private data class ShellResult(val resultCode: Int, val out: String)
 
     private fun exec(command: String, stdin: InputStream? = null): ShellResult {

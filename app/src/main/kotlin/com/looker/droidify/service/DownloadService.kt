@@ -26,6 +26,7 @@ import com.looker.droidify.model.Repository
 import com.looker.droidify.network.DataSize
 import com.looker.droidify.network.Downloader
 import com.looker.droidify.network.NetworkResponse
+import com.looker.droidify.network.header.authentication
 import com.looker.droidify.network.percentBy
 import com.looker.droidify.network.validation.ValidationResult
 import com.looker.droidify.utility.common.Constants
@@ -471,13 +472,14 @@ class DownloadService : ConnectionService<DownloadService.Binder>() {
                 is NetworkResponse.Error -> {
                     updateCurrentState(State.Error(task.packageName))
                     val description = when (response) {
-                        is NetworkResponse.Error.ConnectionTimeout -> connection_error_DESC
-                        is NetworkResponse.Error.Http -> http_error_DESC
-                        is NetworkResponse.Error.IO -> io_error_DESC
-                        is NetworkResponse.Error.SocketTimeout -> socket_error_DESC
-                        is NetworkResponse.Error.Unknown -> unknown_error_DESC
+                        is NetworkResponse.Error.ConnectionTimeout -> getString(connection_error_DESC)
+                        is NetworkResponse.Error.Http ->
+                            getString(http_error_DESC, "HTTP ${response.statusCode}")
+                        is NetworkResponse.Error.IO -> getString(io_error_DESC)
+                        is NetworkResponse.Error.SocketTimeout -> getString(socket_error_DESC)
+                        is NetworkResponse.Error.Unknown -> getString(unknown_error_DESC)
                     }
-                    showErrorNotification(task, could_not_download_FORMAT, getString(description))
+                    showErrorNotification(task, could_not_download_FORMAT, description)
                 }
             }
         } finally {

@@ -47,8 +47,6 @@ class RootInstaller(
 
     override suspend fun uninstall(packageName: PackageName) =
         context.uninstallPackage(packageName)
-
-    override fun close() {}
 }
 
 private const val INSTALL_COMMAND = "cat %s | pm install --user %s -i %s -t -r -S %s"
